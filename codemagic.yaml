@@ -8,8 +8,8 @@ workflows:
     scripts:
       - name: Generate Required Gradle Version & Google Services
         script: |
-          # 1. إنشاء ملف google-services.json
-          mkdir -p app/src/debug app/src/main
+          # 1. إنشاء ملف google-services.json المطلوب
+          mkdir -p app/src/debug app/src/main app
           cat <<EOF > app/google-services.json
           {
             "project_info": { "project_number": "123456789", "project_id": "auto-build", "storage_bucket": "auto.appspot.com" },
@@ -21,8 +21,9 @@ workflows:
           }
           EOF
           cp app/google-services.json app/src/debug/ 2>/dev/null || true
+          cp app/google-services.json app/src/main/ 2>/dev/null || true
 
-          # 2. إنشاء Gradlew بإصدار 9.3.1 المطلوب تماماً من إضافات مشروعك
+          # 2. إنشاء Gradlew بإصدار 9.3.1
           gradle wrapper --gradle-version 9.3.1
           chmod +x gradlew
 
@@ -31,7 +32,6 @@ workflows:
           ./gradlew assembleDebug \
             -x test \
             -x validateSigningDebug \
-            -x processDebugGoogleServices \
             --no-daemon \
             --no-configuration-cache
     artifacts:
