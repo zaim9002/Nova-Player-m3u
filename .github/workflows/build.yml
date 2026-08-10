@@ -1,4 +1,4 @@
-name: Smart Auto-Fix & Build APK
+name: Ultimate Build APK
 
 on:
   push:
@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Set up JDK 17
@@ -20,24 +20,17 @@ jobs:
           distribution: temurin
           java-version: 17
 
-      - name: Auto-Fix Project Files & Environment
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Auto-Generate Missing google-services.json
         run: |
-          echo "=== 1. Checking & Auto-Generating Gradle Wrapper ==="
-          # تثبيت إصدار متوافق واستخراج Gradlew لمنع تعارض Gradle 9.x
-          gradle wrapper --gradle-version 8.5 --distribution-type bin
-          chmod +x gradlew
-
-          echo "=== 2. Auto-Detecting Package Name ==="
-          PKG_NAME=$(grep -oP 'namespace\s*=\s*"\K[^"]+' app/build.gradle* 2>/dev/null || grep -oP 'package="\K[^"]+' app/src/main/AndroidManifest.xml 2>/dev/null || echo "com.aistudio.novaplayer.ar")
-          echo "Detected Package: $PKG_NAME"
-
-          echo "=== 3. Auto-Generating Mock google-services.json ==="
           mkdir -p app/src/debug app/src/main
           cat <<EOF > app/google-services.json
           {
             "project_info": { "project_number": "123456789", "project_id": "auto-build", "storage_bucket": "auto.appspot.com" },
             "client": [{
-              "client_info": { "mobilesdk_app_id": "1:123456789:android:123", "android_client_info": { "package_name": "$PKG_NAME" } },
+              "client_info": { "mobilesdk_app_id": "1:123456789:android:123", "android_client_info": { "package_name": "com.aistudio.novaplayer.ar" } },
               "oauth_client": [], "api_key": [{ "current_key": "mock_key" }], "services": {}
             }],
             "configuration_version": "1"
@@ -45,14 +38,14 @@ jobs:
           EOF
           cp app/google-services.json app/src/debug/ 2>/dev/null || true
 
-      - name: Build Debug APK
+      - name: Execute Build
         run: |
-          ./gradlew assembleDebug \
-            --no-daemon \
-            --no-configuration-cache \
-            -x test \
-            -x lint \
-            --stacktrace
+          chmod +x gradlew 2>/dev/null || true
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleDebug --no-daemon -x test -x lint -x processDebugGoogleServices
+          else
+            gradle assembleDebug --no-daemon -x test -x lint -x processDebugGoogleServices
+          fi
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
