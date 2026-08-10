@@ -1,0 +1,6 @@
+{
+  "name": "Nova Player",
+  "description": "تطبيق IPTV احترافي ومتكامل لتشغيل وإدارة قوائم M3U وXtream Codes",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
